@@ -1,5 +1,6 @@
 --liquibase formatted sql
---changeset iyiola.oluwatosin:20230913103300_create_user_table
+--changeset iyiola.oluwatosin:20230913103500_create_user_table
+
 
 CREATE TABLE IF NOT EXISTS users(
     id              UUID PRIMARY KEY,
@@ -7,7 +8,7 @@ CREATE TABLE IF NOT EXISTS users(
     email           VARCHAR(50) NOT NULL UNIQUE,
     role            VARCHAR(20) NOT NULL,
     password        TEXT NOT NULL,
-    created_on      TIMESTAMP(3) without time zone DEFAULT (now() at time zone 'utc') NOT NULL,
+    created_at      TIMESTAMP(3) without time zone DEFAULT (now() at time zone 'utc') NOT NULL,
     updated_at      TIMESTAMP(3) without time zone DEFAULT (now() at time zone 'utc') NOT NULL
 );
 
