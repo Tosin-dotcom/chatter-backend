@@ -5,13 +5,15 @@ import org.springframework.web.socket.BinaryMessage;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
+import org.springframework.web.socket.handler.AbstractWebSocketHandler;
 import org.springframework.web.socket.handler.BinaryWebSocketHandler;
 
 import java.nio.ByteBuffer;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class SignalingHandler extends BinaryWebSocketHandler {
+public class SignalingHandler extends AbstractWebSocketHandler {
 
 
     private final ConcurrentHashMap<String, ConcurrentHashMap<String, WebSocketSession>> roomSessions = new ConcurrentHashMap<>();
@@ -42,14 +44,40 @@ public class SignalingHandler extends BinaryWebSocketHandler {
             return;
         }
 
-        ByteBuffer payload = message.getPayload();
-
+//        ByteBuffer payload = message.getPayload();
+//        byte[] videoData = message.getPayload().array();
+//        System.out.println("Message "+ message);
+//        System.out.println("Payload " + Arrays.toString(message.getPayload().array()));
         for (WebSocketSession participantSession : room.values()) {
             if (participantSession.isOpen() && !participantSession.equals(session)) {
-                participantSession.sendMessage(new BinaryMessage(payload));
+                participantSession.sendMessage(message);
             }
         }
     }
+
+    @Override
+    protected void handleTextMessage(@NonNull WebSocketSession session, @NonNull TextMessage message) throws Exception {
+        String roomId = getRoomIdFromSession(session);
+
+        if (roomId == null) {
+            session.sendMessage(new TextMessage("Error: Room ID not found for session."));
+            return;
+        }
+
+        ConcurrentHashMap<String, WebSocketSession> room = roomSessions.get(roomId);
+
+        if (room == null) {
+            session.sendMessage(new TextMessage("Error: Room does not exist."));
+            return;
+        }
+
+        for (WebSocketSession participantSession : room.values()) {
+            if (participantSession.isOpen() && !participantSession.equals(session)) {
+                participantSession.sendMessage(message);
+            }
+        }
+    }
+
 
     @Override
     public void afterConnectionClosed(WebSocketSession session, @NonNull CloseStatus status) {
